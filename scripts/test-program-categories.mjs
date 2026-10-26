@@ -15,6 +15,7 @@ try {
  await db.prepare(await readFile('drizzle/0001_rich_junta.sql','utf8')).run();
  for(const statement of (await readFile('drizzle/0002_great_rafael_vega.sql','utf8')).split('--> statement-breakpoint'))if(statement.trim())await db.prepare(statement).run();
  for(const statement of (await readFile('drizzle/0003_nifty_william_stryker.sql','utf8')).split('--> statement-breakpoint'))if(statement.trim())await db.prepare(statement).run();
+ for(const statement of (await readFile('drizzle/0004_white_warstar.sql','utf8')).split('--> statement-breakpoint'))if(statement.trim())await db.prepare(statement).run();
  const legacy = await db.prepare("SELECT category,title FROM posts WHERE id='legacy'").first();
  assert.equal(legacy.category,null);assert.equal(legacy.title,'Legacy record');
  async function request(body,admin=true){const response=await mf.dispatchFetch('https://test.local/api/data',{method:'POST',headers:{'content-type':'application/json',origin:'https://test.local',...(admin?{'oai-authenticated-user-id':'test-owner','oai-authenticated-user-email':'test-owner@example.test'}:{})},body:JSON.stringify(body)});return {status:response.status,data:await response.json()};}
@@ -81,6 +82,26 @@ try {
  const albumRecord=await db.prepare("SELECT * FROM posts WHERE title='Activity album'").first();await request({action:'publish',id:albumRecord.id,published:true});
  const galleryPublic=await (await mf.dispatchFetch('https://test.local/api/data')).json();assert.ok(galleryPublic.posts.some(p=>p.type==='Galeri'&&p.id===albumRecord.id));assert.equal((await mf.dispatchFetch('https://test.local'+image.url)).status,200);
  await request({action:'deletePost',id:albumRecord.id});assert.equal((await mf.dispatchFetch('https://test.local'+image.url)).status,404);
+
+ const pending=await db.prepare("SELECT * FROM members WHERE phone='+60100000077'").first();assert.equal(pending.status,'Menunggu semakan');assert.equal(pending.accepted_at,'');
+ assert.equal((await request({action:'status',id:pending.id,status:'Aktif'})).status,400);
+ const decision={action:'reviewMember',id:pending.id,expectedStatus:'Menunggu semakan',decision:'Terima',note:'Reviewed by administrator'};
+ assert.equal((await request(decision,false)).status,401);
+ const strangerDecision=await mf.dispatchFetch('https://test.local/api/data',{method:'POST',headers:{...strangerHeaders,origin:'https://test.local','content-type':'application/json'},body:JSON.stringify(decision)});assert.equal(strangerDecision.status,401);
+ assert.equal((await request({...decision,decision:'Anything'})).status,400);
+ assert.equal((await request({...decision,expectedStatus:'Baharu'})).status,409);
+ const parallel=await Promise.all([request(decision),request({...decision,decision:'Tolak'})]);assert.deepEqual(parallel.map(r=>r.status).sort(),[200,409]);
+ const decided=await db.prepare('SELECT * FROM members WHERE id=?').bind(pending.id).first();assert.ok(['Aktif','Ditolak'].includes(decided.status));assert.equal(decided.reviewed_by,'test-owner');assert.ok(decided.reviewed_at);assert.equal(decided.review_note,'Reviewed by administrator');assert.equal(Boolean(decided.accepted_at),decided.status==='Aktif');
+ assert.equal((await request(decision)).status,409);
+ const second=(await db.prepare("SELECT * FROM members WHERE phone='+60100000000'").first());assert.equal((await request({...decision,id:second.id,decision:'Terima'})).status,200);
+ assert.equal((await db.prepare('SELECT status FROM members WHERE id=?').bind(second.id).first()).status,'Aktif');
+ assert.equal((await request({action:'status',id:second.id,status:'Menunggu semakan'})).status,400);
+ assert.equal((await request({action:'status',id:second.id,status:'Digantung'})).status,200);
+ assert.equal((await request({action:'status',id:second.id,status:'Aktif'})).status,200);
+ const third=await db.prepare("SELECT * FROM members WHERE phone='+60100000001'").first();await db.prepare("UPDATE members SET status='Baharu' WHERE id=?").bind(third.id).run();assert.equal((await request({...decision,id:third.id,expectedStatus:'Baharu',decision:'Tolak',note:'Internal rejection reason'})).status,200);
+ const rejected=await db.prepare('SELECT * FROM members WHERE id=?').bind(third.id).first();assert.equal(rejected.status,'Ditolak');assert.equal(rejected.accepted_at,'');assert.equal((await request({action:'status',id:third.id,status:'Aktif'})).status,400);
+ const malicious=await request({...minimal,phone:'0100000088',status:'Aktif',acceptedAt:'2020-01-01',reviewedBy:'fake'},false);assert.equal(malicious.status,200);const forcedPending=await db.prepare("SELECT * FROM members WHERE phone='+60100000088'").first();assert.equal(forcedPending.status,'Menunggu semakan');assert.equal(forcedPending.accepted_at,'');assert.equal(forcedPending.reviewed_by,'');
+ console.log('PASS: membership approval/rejection, pending signup, legacy pending, anonymous/non-admin denial, bypass prevention, concurrent review conflict, review metadata, suspension/restoration and client-forged approval ignored.');
  console.log('PASS: image upload authorization, same-origin enforcement, file type rejection, draft media protection, poster persistence, price validation, album consent/limits, publication, and media hidden after unpublish/delete.');
  console.log('PASS: legacy migration, three categories, required/invalid category validation, authorization, persistence, edits, opportunity category clearing, draft visibility, non-admin signed-in users denied, admin permitted, anonymous membership ages 18/30 accepted, out-of-range or invalid ages rejected, minimal signup, optional email validation, registration status, and private inquiry management.');
 } finally {await mf.dispose();}
