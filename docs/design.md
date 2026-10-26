@@ -10,10 +10,15 @@ The selected direction keeps Concept 02's white navigation, forest-green hero an
 Each Program requires one primary category. Opportunities remain a separate content type. Existing records keep a null category until an administrator categorizes them; the migration does not guess their category.
 
 ## Assets
-- `public/logo.png`: original logo supplied by the owner. The navbar uses a CSS crop and color treatment of its central mark, paired with a text wordmark. The original file is unchanged.
+- `public/logo.png`: original logo supplied by the owner, preserved unchanged.
+- `public/brand-mark.svg`: simplified vector rendition of the linked people / BC symbol for small header and footer use. Uses the original green and white identity on a dark-green rounded tile; no CSS crop or color filter.
+- `public/favicon.svg`, `favicon.ico`, `favicon-32.png` and `apple-touch-icon.png`: matching small-size browser and iPhone assets. Metadata uses versioned URLs to refresh cached icons.
 - The earlier illustrative community photograph is no longer used by the website. No photographs of random people appear in hero or cards.
 - Cards use Lucide icons and category-specific accent colors with program text, dates, location and links where provided.
 
 ## Validation
 Run `pnpm exec tsc --noEmit`, `pnpm build`, and `node scripts/test-program-categories.mjs`.
 The category integration test uses an isolated in-memory D1 database and tests migrations, validation, reads, edits, authorization and draft visibility without touching production records.
+
+## Phone layout validation
+Checked local iframe viewports at 320, 390 and 430 pixels. Navigation opens and closes on link selection; form fields render at 16px and 50px tall at the 390px test width. The phone layout uses 44px minimum primary touch targets, scrollable category filters and a single-column registration form. This checks responsive layouts, not real-device Safari behavior.
