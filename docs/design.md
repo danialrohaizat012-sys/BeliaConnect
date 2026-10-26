@@ -45,3 +45,6 @@ Validation: isolated D1/R2 integration suite covers upload auth/origin, unsuppor
 The about section now combines a short introduction with three compact focus cards. Programs remain a separate visual priority: contained poster, category/title, date/location, cost/status, native expandable details and registration link. The new ProgramCard component does not change admin fields or stored program data. No sample programs are published.
 
 Empty programs use a single inline notice; the empty gallery uses a compact heading and one sentence. Community culture and its pledge link are integrated with the join steps, reducing repeated sections. Public heading sizes, spacing and button shapes are aligned, retaining the green identity and footer credit. Phone QA at 320/390/430 shows no horizontal overflow; category buttons update the filter and program details expand correctly.
+
+## Signature hero
+The opening now uses an asymmetric desktop layout, prominent two-line slogan with lime emphasis on “kami!”, concise value copy and a clear join action. A code-native connection illustration links the existing brand mark to Networking, Pembangunan and CSR, without stock people or invented metrics. On phones the illustration moves below the call to action. Tested at 320/390/430 px with no document overflow and verified the hero join button opens the membership form.
