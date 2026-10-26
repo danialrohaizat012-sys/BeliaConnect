@@ -36,6 +36,20 @@
       "when": 1792994418998,
       "tag": "0004_white_warstar",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1792995184963,
+      "tag": "0005_fluffy_ted_forrester",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1792995753671,
+      "tag": "0006_steady_bruce_banner",
+      "breakpoints": true
     }
   ]
 }

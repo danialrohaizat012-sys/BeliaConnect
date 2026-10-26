@@ -16,6 +16,8 @@ try {
  for(const statement of (await readFile('drizzle/0002_great_rafael_vega.sql','utf8')).split('--> statement-breakpoint'))if(statement.trim())await db.prepare(statement).run();
  for(const statement of (await readFile('drizzle/0003_nifty_william_stryker.sql','utf8')).split('--> statement-breakpoint'))if(statement.trim())await db.prepare(statement).run();
  for(const statement of (await readFile('drizzle/0004_white_warstar.sql','utf8')).split('--> statement-breakpoint'))if(statement.trim())await db.prepare(statement).run();
+ for(const statement of (await readFile('drizzle/0005_fluffy_ted_forrester.sql','utf8')).split('--> statement-breakpoint'))if(statement.trim())await db.prepare(statement).run();
+ for(const statement of (await readFile('drizzle/0006_steady_bruce_banner.sql','utf8')).split('--> statement-breakpoint'))if(statement.trim())await db.prepare(statement).run();
  const legacy = await db.prepare("SELECT category,title FROM posts WHERE id='legacy'").first();
  assert.equal(legacy.category,null);assert.equal(legacy.title,'Legacy record');
  async function request(body,admin=true){const response=await mf.dispatchFetch('https://test.local/api/data',{method:'POST',headers:{'content-type':'application/json',origin:'https://test.local',...(admin?{'oai-authenticated-user-id':'test-owner','oai-authenticated-user-email':'test-owner@example.test'}:{})},body:JSON.stringify(body)});return {status:response.status,data:await response.json()};}
@@ -38,7 +40,7 @@ try {
  const strangerRead=await mf.dispatchFetch('https://test.local/api/data?admin=1',{headers:strangerHeaders});assert.equal(strangerRead.status,401);
  const strangerWrite=await mf.dispatchFetch('https://test.local/api/data',{method:'POST',headers:{...strangerHeaders,'content-type':'application/json',origin:'https://test.local'},body:JSON.stringify({...program,category:'CSR'})});assert.equal(strangerWrite.status,401);
  const adminRead=await mf.dispatchFetch('https://test.local/api/data?admin=1',{headers:{'oai-authenticated-user-id':'test-owner','oai-authenticated-user-email':'test-owner@example.test'}});assert.equal(adminRead.status,200);
- const member={action:'join',name:'Age boundary test',nickname:'',phone:'0100000000',email:'test@example.test',age:'18',district:'Test',state:'Test',occupation:'Belajar',skills:'Test',interests:'Test',expectations:'',pledge:true,consent:true};
+ const member={action:'join',name:'Age boundary test',nickname:'',phone:'0100000000',email:'',age:'18',district:'Test',state:'Test',occupation:'Belajar',skills:'Test',interests:'Test',expectations:'',pledge:true,consent:true};
  for(const [index,age] of ['18','30'].entries()){const r=await request({...member,phone:'010000000'+index,age},false);assert.equal(r.status,200,JSON.stringify(r));}
  for(const age of ['17','31','18.5','NaN','Infinity','18abc','1e2']){const r=await request({...member,phone:'0100000099',age},false);assert.equal(r.status,400,age);assert.match(r.data.error,/18.*30/);}
  assert.equal((await db.prepare("SELECT COUNT(*) AS total FROM members").first()).total,2);

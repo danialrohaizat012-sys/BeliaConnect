@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX `members_verified_email_unique` ON `members` (lower("email")) WHERE "members"."email" != '';
