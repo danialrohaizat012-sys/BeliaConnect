@@ -40,3 +40,8 @@ Admin → Program → Add/Edit: upload a JPG/PNG/WebP poster, set cost and optio
 Uploads are resized client-side to a maximum 1800 px edge as WebP and stored in R2; authenticated allowlisted admins only. Server checks origin, size and image signature. Unpublished/unreferenced media is not served publicly, and all responses are no-store so unpublishing takes effect without a CDN cache window. Removed images remain private in storage; removal detaches the reference without destructive object deletion.
 
 Validation: isolated D1/R2 integration suite covers upload auth/origin, unsupported file type, draft access, poster/price persistence, album consent and limits, publishing and hiding media after withdrawal/deletion. Browser checked phone widths 320/390/430 without horizontal overflow, mobile gallery navigation, admin album fields and image viewer next/previous. Physical iOS not tested.
+
+## Compact public layout
+The about section now combines a short introduction with three compact focus cards. Programs remain a separate visual priority: contained poster, category/title, date/location, cost/status, native expandable details and registration link. The new ProgramCard component does not change admin fields or stored program data. No sample programs are published.
+
+Empty programs use a single inline notice; the empty gallery uses a compact heading and one sentence. Community culture and its pledge link are integrated with the join steps, reducing repeated sections. Public heading sizes, spacing and button shapes are aligned, retaining the green identity and footer credit. Phone QA at 320/390/430 shows no horizontal overflow; category buttons update the filter and program details expand correctly.
