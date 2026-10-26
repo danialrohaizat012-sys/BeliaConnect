@@ -5,8 +5,8 @@ const require = createRequire(import.meta.url);
 const runtime = createRequire(require.resolve('wrangler/package.json'));
 const { Miniflare } = runtime('miniflare');
 const { build } = runtime('esbuild');
-const result = await build({stdin:{contents:"import * as route from './app/api/data/route.ts'; export default {fetch(r){return r.method==='GET'?route.GET(r):route.POST(r)}}",resolveDir:process.cwd(),sourcefile:'category-tests.ts'},bundle:true,write:false,format:'esm',platform:'neutral',external:['cloudflare:workers'],conditions:['workerd','worker']});
-const mf = new Miniflare({modules:true,script:result.outputFiles[0].text,compatibilityDate:'2026-05-15',compatibilityFlags:['nodejs_compat'],d1Databases:['DB'],bindings:{ADMIN_EMAILS:'test-owner@example.test'},cf:false});
+const result = await build({stdin:{contents:"import * as route from './app/api/data/route.ts'; import * as media from './app/api/media/route.ts'; export default {fetch(r){const handler=new URL(r.url).pathname==='/api/media'?media:route;return r.method==='GET'?handler.GET(r):handler.POST(r)}}",resolveDir:process.cwd(),sourcefile:'category-tests.ts'},bundle:true,write:false,format:'esm',platform:'neutral',external:['cloudflare:workers'],conditions:['workerd','worker']});
+const mf = new Miniflare({modules:true,script:result.outputFiles[0].text,compatibilityDate:'2026-05-15',compatibilityFlags:['nodejs_compat'],d1Databases:['DB'],r2Buckets:['BUCKET'],bindings:{ADMIN_EMAILS:'test-owner@example.test'},cf:false});
 try {
  const db = await mf.getD1Database('DB');
  const migration = await readFile('drizzle/0000_flaky_juggernaut.sql','utf8');
@@ -14,6 +14,7 @@ try {
  await db.prepare("INSERT INTO posts (id,type,title,description,date,location,url,published) VALUES ('legacy','Program','Legacy record','Preserve this','','','','1')").run();
  await db.prepare(await readFile('drizzle/0001_rich_junta.sql','utf8')).run();
  for(const statement of (await readFile('drizzle/0002_great_rafael_vega.sql','utf8')).split('--> statement-breakpoint'))if(statement.trim())await db.prepare(statement).run();
+ for(const statement of (await readFile('drizzle/0003_nifty_william_stryker.sql','utf8')).split('--> statement-breakpoint'))if(statement.trim())await db.prepare(statement).run();
  const legacy = await db.prepare("SELECT category,title FROM posts WHERE id='legacy'").first();
  assert.equal(legacy.category,null);assert.equal(legacy.title,'Legacy record');
  async function request(body,admin=true){const response=await mf.dispatchFetch('https://test.local/api/data',{method:'POST',headers:{'content-type':'application/json',origin:'https://test.local',...(admin?{'oai-authenticated-user-id':'test-owner','oai-authenticated-user-email':'test-owner@example.test'}:{})},body:JSON.stringify(body)});return {status:response.status,data:await response.json()};}
@@ -55,5 +56,31 @@ try {
  assert.equal((await request({action:'inquiryStatus',id:adminAfter.inquiries[0].id,status:'Selesai'},false)).status,401);
  assert.equal((await request({action:'inquiryStatus',id:adminAfter.inquiries[0].id,status:'Selesai'})).status,200);
  assert.equal((await db.prepare('SELECT status FROM inquiries').first()).status,'Selesai');
+
+ const headers={'oai-authenticated-user-id':'test-owner','oai-authenticated-user-email':'test-owner@example.test',origin:'https://test.local'};
+ async function upload(bytes,type='image/png',customHeaders=headers){const form=new FormData();form.set('file',new Blob([new Uint8Array(bytes)],{type}),'photo.png');const encoded=new Request('https://test.local/api/media',{method:'POST',body:form});return mf.dispatchFetch(encoded.url,{method:'POST',headers:{...customHeaders,'content-type':encoded.headers.get('content-type')},body:await encoded.arrayBuffer()});}
+ assert.equal((await upload([137,80,78,71], 'image/png',{})).status,401);
+ assert.equal((await upload([137,80,78,71], 'image/png',{...headers,origin:'https://other.test'})).status,403);
+ assert.equal((await upload([60,115,118,103,62],'image/svg+xml')).status,400);
+ const uploaded=await upload([137,80,78,71,13,10,26,10]);assert.equal(uploaded.status,200);const image=await uploaded.json();
+ assert.equal((await mf.dispatchFetch('https://test.local'+image.url)).status,404);
+ assert.equal((await mf.dispatchFetch('https://test.local'+image.url,{headers})).status,200);
+ assert.equal((await request({...program,category:'CSR',costType:'Berbayar',price:'0'})).status,400);
+ assert.equal((await request({...program,category:'CSR',poster:'https://untrusted.test/image.png'})).status,400);
+ assert.equal((await request({...program,category:'CSR',title:'Poster program',poster:image.url,costType:'Berbayar',price:'25.5'})).status,200);
+ assert.equal((await mf.dispatchFetch('https://test.local'+image.url)).status,200);
+ const posterRecord=await db.prepare("SELECT * FROM posts WHERE title='Poster program'").first();assert.equal(posterRecord.price,'25.50');assert.equal(posterRecord.poster,image.url);
+ await request({action:'publish',id:posterRecord.id,published:false});assert.equal((await mf.dispatchFetch('https://test.local'+image.url)).status,404);
+ const album={action:'post',type:'Galeri',title:'Activity album',description:'Real moments',images:JSON.stringify([{url:image.url,caption:'A real activity'}]),photoConsent:true,published:false};
+ assert.equal((await request({...album,photoConsent:false})).status,400);
+ assert.equal((await request({...album,images:'[]'})).status,400);
+ assert.equal((await request({...album,images:JSON.stringify(Array(13).fill({url:image.url,caption:''}))})).status,400);
+ assert.equal((await request(album,false)).status,401);
+ assert.equal((await request(album)).status,200);
+ assert.equal((await mf.dispatchFetch('https://test.local'+image.url)).status,404);
+ const albumRecord=await db.prepare("SELECT * FROM posts WHERE title='Activity album'").first();await request({action:'publish',id:albumRecord.id,published:true});
+ const galleryPublic=await (await mf.dispatchFetch('https://test.local/api/data')).json();assert.ok(galleryPublic.posts.some(p=>p.type==='Galeri'&&p.id===albumRecord.id));assert.equal((await mf.dispatchFetch('https://test.local'+image.url)).status,200);
+ await request({action:'deletePost',id:albumRecord.id});assert.equal((await mf.dispatchFetch('https://test.local'+image.url)).status,404);
+ console.log('PASS: image upload authorization, same-origin enforcement, file type rejection, draft media protection, poster persistence, price validation, album consent/limits, publication, and media hidden after unpublish/delete.');
  console.log('PASS: legacy migration, three categories, required/invalid category validation, authorization, persistence, edits, opportunity category clearing, draft visibility, non-admin signed-in users denied, admin permitted, anonymous membership ages 18/30 accepted, out-of-range or invalid ages rejected, minimal signup, optional email validation, registration status, and private inquiry management.');
 } finally {await mf.dispose();}

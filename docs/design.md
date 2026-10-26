@@ -31,3 +31,12 @@ Membership requires only name, WhatsApp, age (18–30), state/region and interes
 Program posts include a manually managed registration status: Maklumat sahaja, Dibuka, Ditutup or Selesai. Dibuka requires an HTTPS registration link. Existing posts default to Maklumat sahaja; no legacy program is advertised as open automatically.
 
 The contact section identifies Danial Roi as the community organizer and provides an on-site inquiry form instead of publishing an unverified official phone or email. Inquiry data is available to allowlisted admins only in Pertanyaan. The form does not promise automatic emails, notifications or a response time.
+
+## Program posters and activity gallery
+Program cards accept an optional uploaded poster (contained, never cropped), registration status and a cost label: not yet set, free or paid in RM. Existing programs keep an unknown cost rather than implying free entry. Hero and navigation clarify free membership and point visitors to programs; the join section explains the three-step process.
+
+Admin → Program → Add/Edit: upload a JPG/PNG/WebP poster, set cost and optionally price. Admin → Galeri → Tambah album: add title, date/location, description, up to 12 photos and individual captions; confirm permission to publish. Save as draft or publish. A published album appears in Momen bersama. The viewer supports next/previous, captions, Escape and native dialog focus management. Empty gallery uses truthful placeholder copy. No sample photos are deployed.
+
+Uploads are resized client-side to a maximum 1800 px edge as WebP and stored in R2; authenticated allowlisted admins only. Server checks origin, size and image signature. Unpublished/unreferenced media is not served publicly, and all responses are no-store so unpublishing takes effect without a CDN cache window. Removed images remain private in storage; removal detaches the reference without destructive object deletion.
+
+Validation: isolated D1/R2 integration suite covers upload auth/origin, unsupported file type, draft access, poster/price persistence, album consent and limits, publishing and hiding media after withdrawal/deletion. Browser checked phone widths 320/390/430 without horizontal overflow, mobile gallery navigation, admin album fields and image viewer next/previous. Physical iOS not tested.
