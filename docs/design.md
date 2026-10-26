@@ -1,6 +1,6 @@
 # Belia Connect — Concept 02
 
-The selected direction is a photographic community website: white navigation, a forest-green hero overlay, lime calls to action and clear program categories.
+The selected direction keeps Concept 02's white navigation, forest-green hero and lime calls to action. Following owner feedback, the hero now uses a typographic graphic of the three program pillars. Category and program cards use icons, typography and metadata, without stock or generated photographs of people. Real activity photographs may be introduced when supplied by the owner.
 
 ## Program taxonomy
 - Networking: introductions, professional relationships and collaboration.
@@ -11,9 +11,8 @@ Each Program requires one primary category. Opportunities remain a separate cont
 
 ## Assets
 - `public/logo.png`: original logo supplied by the owner. The navbar uses a CSS crop and color treatment of its central mark, paired with a text wordmark. The original file is unchanged.
-- `public/community-hero.png`: AI-generated illustrative community photo, created with the built-in image-generation tool. It is not documentary evidence of an actual Belia Connect event. The website labels the image as illustrative.
-
-Hero prompt: A wide premium editorial lifestyle photograph of four Malaysian young adults discussing a community project around a laptop in a contemporary tropical coworking cafe in Kelantan. Two men and two women in modest olive, cream and dark-green clothing, women wearing hijabs. Natural candid interaction, realistic skin and hands, subjects grouped on the right, defocused dark-green interior on the left for a website heading, eye-level camera, natural window light. Background photo only: no text, logos, watermark, UI, frames, collage or graphic overlays.
+- The earlier illustrative community photograph is no longer used by the website. No photographs of random people appear in hero or cards.
+- Cards use Lucide icons and category-specific accent colors with program text, dates, location and links where provided.
 
 ## Validation
 Run `pnpm exec tsc --noEmit`, `pnpm build`, and `node scripts/test-program-categories.mjs`.
