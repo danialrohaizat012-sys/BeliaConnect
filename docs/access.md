@@ -9,3 +9,5 @@ Public GET responses contain published posts only. Member records and draft post
 Changing hosting access to public is performed only after deploying the server-side authorization. Migrating to a different host also requires preserving trusted identity-header handling and configuring admin access on that host.
 
 Run `node scripts/test-program-categories.mjs` to verify anonymous registration, age boundaries, category validation, publication visibility, authorized administration and rejection of anonymous or non-admin access.
+
+Public contact inquiries are stored in the inquiries table. Name, reply contact, message and consent are validated. Only allowlisted administrators may read or mark inquiries complete; public post responses exclude inquiry and member records. No external message or email is sent automatically.

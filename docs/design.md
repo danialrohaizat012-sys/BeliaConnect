@@ -22,3 +22,12 @@ The category integration test uses an isolated in-memory D1 database and tests m
 
 ## Phone layout validation
 Checked local iframe viewports at 320, 390 and 430 pixels. Navigation opens and closes on link selection; form fields render at 16px and 50px tall at the 390px test width. The phone layout uses 44px minimum primary touch targets, scrollable category filters and a single-column registration form. This checks responsive layouts, not real-device Safari behavior.
+
+## Simplified visitor journey
+The homepage now follows hero, about, three program categories, published programs, compact Coming Soon store, community values and joining, then organizer/contact. Navigation is limited to Tentang, Program and Connect Store. At narrow widths the header button says Sertai; there is no horizontal document overflow in the 320px preview.
+
+Membership requires only name, WhatsApp, age (18–30), state/region and interests. Email, nickname, district, occupation, skills and expectations are optional. Additional information is in a disclosure panel. The form explains review and contact after submission. Required Aku Janji and privacy consent remain.
+
+Program posts include a manually managed registration status: Maklumat sahaja, Dibuka, Ditutup or Selesai. Dibuka requires an HTTPS registration link. Existing posts default to Maklumat sahaja; no legacy program is advertised as open automatically.
+
+The contact section identifies Danial Roi as the community organizer and provides an on-site inquiry form instead of publishing an unverified official phone or email. Inquiry data is available to allowlisted admins only in Pertanyaan. The form does not promise automatic emails, notifications or a response time.

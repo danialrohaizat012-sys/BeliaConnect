@@ -13,6 +13,7 @@ try {
  for(const statement of migration.split('--> statement-breakpoint'))if(statement.trim())await db.prepare(statement).run();
  await db.prepare("INSERT INTO posts (id,type,title,description,date,location,url,published) VALUES ('legacy','Program','Legacy record','Preserve this','','','','1')").run();
  await db.prepare(await readFile('drizzle/0001_rich_junta.sql','utf8')).run();
+ for(const statement of (await readFile('drizzle/0002_great_rafael_vega.sql','utf8')).split('--> statement-breakpoint'))if(statement.trim())await db.prepare(statement).run();
  const legacy = await db.prepare("SELECT category,title FROM posts WHERE id='legacy'").first();
  assert.equal(legacy.category,null);assert.equal(legacy.title,'Legacy record');
  async function request(body,admin=true){const response=await mf.dispatchFetch('https://test.local/api/data',{method:'POST',headers:{'content-type':'application/json',origin:'https://test.local',...(admin?{'oai-authenticated-user-id':'test-owner','oai-authenticated-user-email':'test-owner@example.test'}:{})},body:JSON.stringify(body)});return {status:response.status,data:await response.json()};}
@@ -39,5 +40,20 @@ try {
  for(const [index,age] of ['18','30'].entries()){const r=await request({...member,phone:'010000000'+index,age},false);assert.equal(r.status,200,JSON.stringify(r));}
  for(const age of ['17','31','18.5','NaN','Infinity','18abc','1e2']){const r=await request({...member,phone:'0100000099',age},false);assert.equal(r.status,400,age);assert.match(r.data.error,/18.*30/);}
  assert.equal((await db.prepare("SELECT COUNT(*) AS total FROM members").first()).total,2);
- console.log('PASS: legacy migration, three categories, required/invalid category validation, authorization, persistence, edits, opportunity category clearing, draft visibility, non-admin signed-in users denied, admin permitted, anonymous membership ages 18/30 accepted, and out-of-range or invalid ages rejected.');
+ const minimal={action:'join',name:'Minimal member',phone:'0100000077',age:'23',state:'Test',interests:'Technology',pledge:true,consent:true};
+ assert.equal((await request(minimal,false)).status,200);
+ assert.equal((await request({...minimal,phone:'0100000078',email:'invalid'},false)).status,400);
+ const minimalSaved=await db.prepare('SELECT email,skills,occupation FROM members WHERE phone=?').bind('+60100000077').first();assert.equal(minimalSaved.email,'');assert.equal(minimalSaved.skills,'');
+ assert.equal((await request({...program,category:'CSR',registrationStatus:'Dibuka'})).status,400);
+ assert.equal((await request({...program,title:'Open program',category:'CSR',registrationStatus:'Dibuka',url:'https://example.test/register'})).status,200);
+ assert.equal((await request({...program,category:'CSR',registrationStatus:'Invalid'})).status,400);
+ const inquiry={action:'contact',name:'Test visitor',contact:'visitor@example.test',message:'A community question',consent:true};
+ assert.equal((await request({...inquiry,consent:false},false)).status,400);
+ assert.equal((await request(inquiry,false)).status,200);
+ const publicAfter=await (await mf.dispatchFetch('https://test.local/api/data')).json();assert.equal(publicAfter.inquiries,undefined);assert.equal(publicAfter.members,undefined);
+ const adminAfter=await (await mf.dispatchFetch('https://test.local/api/data?admin=1',{headers:{'oai-authenticated-user-id':'test-owner','oai-authenticated-user-email':'test-owner@example.test'}})).json();assert.equal(adminAfter.inquiries.length,1);
+ assert.equal((await request({action:'inquiryStatus',id:adminAfter.inquiries[0].id,status:'Selesai'},false)).status,401);
+ assert.equal((await request({action:'inquiryStatus',id:adminAfter.inquiries[0].id,status:'Selesai'})).status,200);
+ assert.equal((await db.prepare('SELECT status FROM inquiries').first()).status,'Selesai');
+ console.log('PASS: legacy migration, three categories, required/invalid category validation, authorization, persistence, edits, opportunity category clearing, draft visibility, non-admin signed-in users denied, admin permitted, anonymous membership ages 18/30 accepted, out-of-range or invalid ages rejected, minimal signup, optional email validation, registration status, and private inquiry management.');
 } finally {await mf.dispose();}
