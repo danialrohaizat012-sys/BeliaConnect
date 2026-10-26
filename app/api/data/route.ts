@@ -1,9 +1,10 @@
 import {getDb} from '../../../db';
+import {env} from 'cloudflare:workers';
+import {isAdminIdentity} from '../../../lib/admin-access';
 import {members,posts} from '../../../db/schema';
 import {eq,desc} from 'drizzle-orm';
 export const dynamic='force-dynamic';
-// Owner-private Site access is the authorization boundary for this first deployment.
-const authorized=(r:Request)=>!!r.headers.get('oai-authenticated-user-id');
+const authorized=(r:Request)=>isAdminIdentity(r.headers.get('oai-authenticated-user-id'),r.headers.get('oai-authenticated-user-email'),(env as unknown as {ADMIN_EMAILS?:string}).ADMIN_EMAILS);
 const reply=(data:unknown,status=200)=>Response.json(data,{status,headers:{'Cache-Control':'no-store'}});
 export async function GET(r:Request){try{const db=getDb();if(new URL(r.url).searchParams.has('admin')){if(!authorized(r))return reply({error:'Sila log masuk.'},401);return reply({members:await db.select().from(members).orderBy(desc(members.createdAt)),posts:await db.select().from(posts)});}return reply({posts:await db.select().from(posts).where(eq(posts.published,'1'))});}catch{return reply({error:'Data tidak dapat dimuatkan. Sila cuba lagi.'},503)}}
 export async function POST(r:Request){try{if(r.headers.get('origin')!==new URL(r.url).origin)return reply({error:'Permintaan tidak sah.'},403);const b:any=await r.json();const db=getDb();if(b.action==='join'){const fields=['name','phone','email','age','district','state','occupation','skills','interests'];for(const f of fields)if(typeof b[f]!=='string'||!b[f].trim()||b[f].length>1000)return reply({error:'Sila lengkapkan maklumat wajib.'},400);if(!/^\d{2}$/.test(b.age)||!Number.isInteger(Number(b.age))||Number(b.age)<18||Number(b.age)>30)return reply({error:'Penyertaan Belia Connect terbuka kepada belia berumur 18 hingga 30 tahun sahaja.'},400);if(!b.pledge||!b.consent||!/^\S+@\S+\.\S+$/.test(b.email)||!/^\+?[\d\s-]{9,18}$/.test(b.phone))return reply({error:'Semak e-mel, telefon dan persetujuan.'},400);const id=crypto.randomUUID();const data:any={id,status:'Baharu',pledgeVersion:'1.0',createdAt:new Date().toISOString()};for(const f of [...fields,'nickname','expectations'])data[f]=String(b[f]||'').trim().slice(0,1000);data.phone=data.phone.replace(/[\s-]/g,'').replace(/^0/,'+60');try{await db.insert(members).values(data);}catch(e){if(String(e).includes('UNIQUE'))return reply({error:'Nombor WhatsApp ini telah didaftarkan.'},409);throw e;}return reply({ok:true,id});}

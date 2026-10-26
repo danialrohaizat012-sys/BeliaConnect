@@ -25,7 +25,7 @@ Rujuk [panduan runtime](docs/runtime.md) untuk butiran binding, migrasi tempatan
 ## Hosting dan akses
 Kod ini ialah aplikasi server, bukan static export. GitHub Pages sahaja tidak menyokong API atau pangkalan data aplikasi ini.
 
-Deployment semasa menggunakan ChatGPT Sites dengan Cloudflare D1 (`DB`). Authentication disediakan oleh platform Sites. Endpoint internal bergantung pada akses owner-private Site dan identiti yang disahkan oleh platform. Kekalkan akses peribadi; sebelum dibuka kepada umum atau dipindahkan ke hosting lain, tambah authorization khusus admin di halaman dan API internal serta semak semula integrasi authentication.
+Deployment semasa menggunakan ChatGPT Sites dengan Cloudflare D1 (`DB`). Website awam dan borang penyertaan boleh diakses tanpa login. Halaman `/admin` memerlukan login ChatGPT, dan halaman serta API internal menyemak senarai admin `ADMIN_EMAILS` pada server. Akaun yang tidak disenaraikan ditolak walaupun telah login. Simpan nilai `ADMIN_EMAILS` dalam runtime environment hosting, bukan dalam repository. Rujuk [panduan akses](docs/access.md).
 
 `.openai/hosting.json` mengekalkan identiti deployment asal; ia tidak mengandungi token. Jangan salin identiti projek ini untuk mencipta Site lain.
 
