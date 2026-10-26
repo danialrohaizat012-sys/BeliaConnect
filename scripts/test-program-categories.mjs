@@ -31,5 +31,9 @@ try {
  assert.equal((await db.prepare('SELECT category FROM posts WHERE id=?').bind(saved.id).first()).category,null);
  assert.equal((await request({...program,title:'Draft only',category:'CSR',published:false})).status,200);
  response=await mf.dispatchFetch('https://test.local/api/data');data=await response.json();assert.ok(!data.posts.some(p=>p.title==='Draft only'));
- console.log('PASS: legacy migration, three categories, required/invalid category validation, authorization, persistence, edits, opportunity category clearing, and draft visibility.');
+ const member={action:'join',name:'Age boundary test',nickname:'',phone:'0100000000',email:'test@example.test',age:'18',district:'Test',state:'Test',occupation:'Belajar',skills:'Test',interests:'Test',expectations:'',pledge:true,consent:true};
+ for(const [index,age] of ['18','30'].entries()){const r=await request({...member,phone:'010000000'+index,age},false);assert.equal(r.status,200,JSON.stringify(r));}
+ for(const age of ['17','31','18.5','NaN','Infinity','18abc','1e2']){const r=await request({...member,phone:'0100000099',age},false);assert.equal(r.status,400,age);assert.match(r.data.error,/18.*30/);}
+ assert.equal((await db.prepare("SELECT COUNT(*) AS total FROM members").first()).total,2);
+ console.log('PASS: legacy migration, three categories, required/invalid category validation, authorization, persistence, edits, opportunity category clearing, draft visibility, membership ages 18/30 accepted, and out-of-range or invalid ages rejected.');
 } finally {await mf.dispose();}
