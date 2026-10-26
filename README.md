@@ -36,3 +36,8 @@ Repository hanya mengandungi source code, aset dan migrasi skema. Data ahli, dat
 - Semakan TypeScript dan binaan production lulus.
 - Paparan website dan aliran borang disemak dalam pelayar.
 - Penyimpanan pendaftaran serta versi Aku Janji diuji pada pangkalan data tempatan.
+
+## Design dan kategori program
+Versi semasa mengikut Concept 02 (Komuniti Profesional), dengan kategori program **Networking**, **Pembangunan** dan **CSR**. Kategori diwajibkan bagi program baharu dan boleh ditapis pada website serta dashboard. Rekod lama dikekalkan tanpa kategori sehingga dikemas kini oleh urusetia.
+
+Ujian kategori: `node scripts/test-program-categories.mjs`. Rujuk [nota reka bentuk dan aset](docs/design.md).
